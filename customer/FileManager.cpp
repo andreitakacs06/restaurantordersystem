@@ -16,7 +16,6 @@ bool FileManager::loadOrders()
     std::ifstream inputFile(filename_);
     if (!inputFile.is_open())
     {
-        // If the file does not exist yet, create it empty and return success.
         std::ofstream createFile(filename_);
         return createFile.is_open();
     }

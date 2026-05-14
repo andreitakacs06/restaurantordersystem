@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <d3d11.h>
 
+#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -120,7 +121,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
+int RunCustomerGui(HINSTANCE hInstance, int nCmdShow)
 {
     WNDCLASSEXW wc = {sizeof(WNDCLASSEXW), CS_CLASSDC, WndProc, 0, 0,
                       GetModuleHandle(NULL), NULL, NULL, NULL, NULL,
@@ -217,4 +218,80 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
     UnregisterClassW(wc.lpszClassName, wc.hInstance);
 
     return 0;
+}
+
+int RunCustomerCli(int argc, char** argv)
+{
+    if (argc < 2)
+    {
+        std::cout << "Usage:\n";
+        std::cout << "  customer.exe view\n";
+        std::cout << "  customer.exe place <PRODUCT>\n";
+        return 1;
+    }
+
+    std::string command = argv[1];
+    FileManager fileManager("../orders.txt");
+    Customer customer("Customer");
+
+    if (command == "view")
+    {
+        if (argc != 2)
+        {
+            std::cout << "Error: 'view' takes no extra arguments.\n";
+            return 1;
+        }
+
+        fileManager.loadOrders();
+        const std::vector<Order>& orders = fileManager.getOrders();
+        for (std::size_t i = 0; i < orders.size(); ++i)
+        {
+            std::cout << orders[i] << "\n";
+        }
+        return 0;
+    }
+
+    if (command == "place")
+    {
+        if (argc != 3)
+        {
+            std::cout << "Error: 'place' requires <PRODUCT>.\n";
+            return 1;
+        }
+
+        std::string product = argv[2];
+        if (product.empty())
+        {
+            std::cout << "Error: PRODUCT cannot be empty.\n";
+            return 1;
+        }
+
+        fileManager.loadOrders();
+        if (!customer.placeOrder(fileManager, product))
+        {
+            std::cout << "Error: Failed to place order.\n";
+            return 1;
+        }
+
+        std::cout << "Order placed successfully.\n";
+        return 0;
+    }
+
+    std::cout << "Error: Unknown command.\n";
+    return 1;
+}
+
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
+{
+    return RunCustomerGui(hInstance, nCmdShow);
+}
+
+int main(int argc, char** argv)
+{
+    if (argc > 1)
+    {
+        return RunCustomerCli(argc, argv);
+    }
+
+    return RunCustomerGui(GetModuleHandle(NULL), SW_SHOWDEFAULT);
 }

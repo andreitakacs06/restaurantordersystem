@@ -21,5 +21,4 @@ private:
     std::string status_;
 };
 
-// Operator overload for clean display of a single order.
 std::ostream& operator<<(std::ostream& os, const Order& order);

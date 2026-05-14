@@ -4,6 +4,7 @@
 #include <d3d11.h>
 #include <tchar.h>
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -113,7 +114,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     }
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
+int RunKitchenGui(HINSTANCE hInstance, int showCmd) {
     WNDCLASSEX wc;
     ZeroMemory(&wc, sizeof(wc));
     wc.cbSize = sizeof(WNDCLASSEX);
@@ -143,7 +144,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         return 1;
     }
 
-    ShowWindow(hwnd, SW_SHOWDEFAULT);
+    ShowWindow(hwnd, showCmd);
     UpdateWindow(hwnd);
 
     IMGUI_CHECKVERSION();
@@ -248,4 +249,79 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     DestroyWindow(hwnd);
     UnregisterClass(wc.lpszClassName, wc.hInstance);
     return 0;
+}
+
+int RunKitchenCli(int argc, char** argv) {
+    if (argc < 2) {
+        std::cout << "Usage:\n";
+        std::cout << "  kitchen.exe view\n";
+        std::cout << "  kitchen.exe update <ID> <STATUS>\n";
+        return 1;
+    }
+
+    std::string command = argv[1];
+    FileManager fileManager("../orders.txt");
+    KitchenStaff staff("KitchenUser");
+
+    if (command == "view") {
+        if (argc != 2) {
+            std::cout << "Error: 'view' takes no extra arguments.\n";
+            return 1;
+        }
+
+        std::vector<Order> orders = fileManager.loadOrders();
+        for (std::size_t i = 0; i < orders.size(); ++i) {
+            std::cout << orders[i] << "\n";
+        }
+        return 0;
+    }
+
+    if (command == "update") {
+        if (argc != 4) {
+            std::cout << "Error: 'update' requires <ID> and <STATUS>.\n";
+            return 1;
+        }
+
+        std::string idText = argv[2];
+        std::string newStatus = argv[3];
+
+        int id = 0;
+        try {
+            id = std::stoi(idText);
+        } catch (...) {
+            std::cout << "Error: ID must be a positive integer.\n";
+            return 1;
+        }
+
+        if (id <= 0) {
+            std::cout << "Error: ID must be greater than 0.\n";
+            return 1;
+        }
+
+        std::vector<Order> orders = fileManager.loadOrders();
+        bool updated = staff.updateOrderStatus(orders, id, newStatus);
+        if (!updated) {
+            std::cout << "Error: Order ID not found.\n";
+            return 1;
+        }
+
+        fileManager.saveOrders(orders);
+        std::cout << "Order updated successfully.\n";
+        return 0;
+    }
+
+    std::cout << "Error: Unknown command.\n";
+    return 1;
+}
+
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
+    return RunKitchenGui(hInstance, nCmdShow);
+}
+
+int main(int argc, char** argv) {
+    if (argc > 1) {
+        return RunKitchenCli(argc, argv);
+    }
+
+    return RunKitchenGui(GetModuleHandle(NULL), SW_SHOWDEFAULT);
 }

@@ -42,7 +42,6 @@ void Order::setStatus(const std::string &status)
 
 std::ostream &operator<<(std::ostream &os, const Order &order)
 {
-    // Display a single order in a clean, readable format.
     os << "Order ID: " << order.id_
        << " | Product: " << order.product_
        << " | Status: " << order.status_;

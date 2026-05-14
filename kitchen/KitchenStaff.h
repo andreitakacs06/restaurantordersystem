@@ -14,7 +14,6 @@ public:
     bool updateOrderStatus(std::vector<Order>& orders, int id, const std::string& newStatus) const;
 };
 
-// Template utility function for displaying any vector of items using operator<<.
 template <typename T>
 void displayVector(const std::vector<T>& items) {
     if (items.empty()) {

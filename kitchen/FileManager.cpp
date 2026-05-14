@@ -10,7 +10,6 @@ std::vector<Order> FileManager::loadOrders() const {
     std::ifstream input(filePath_);
 
     if (!input.is_open()) {
-        // If the file doesn't exist yet, return an empty list.
         return orders;
     }
 
